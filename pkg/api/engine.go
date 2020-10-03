@@ -38,12 +38,14 @@ func CreateAPIEngine(db *sql.DB, activateSMSProvider, activateEmailProvider bool
 	v1.POST("product", productController.Post)
 	v1.PUT("product", productController.Put)
 	v1.DELETE("product", productController.Delete)
+
 	sellerController := seller.NewController(sellerRepository)
 	v1.GET("sellers", sellerController.List)
 
 	v2 := r.Group("api/v2")
 	v2.GET("products", productController.List)
 	v2.GET("product", productController.Get)
+	v2.GET("sellers/top10", sellerController.ListSellerWithMaxProduct)
 
 	return r, nil
 }
