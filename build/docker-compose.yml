@@ -1,0 +1,38 @@
+version: '3.3'
+
+services:
+  db:
+    container_name: gfg_mysql
+    image: mysql:5.7.27
+    environment:
+      MYSQL_DATABASE: 'product'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '33066:3306'
+    expose:
+      - '3306'
+    volumes:
+      - db:/var/lib/mysql
+
+  product:
+    container_name: gfg_go
+    image: golang:1.13
+    ports:
+      - "8080:8080"
+    command: go run api.go
+    environment:
+      - LISTEN=:8080
+    depends_on:
+      - db
+    links:
+      - db
+    volumes:
+      - ../:/go/src/gfg
+      - go-pkg:/go/pkg
+    working_dir: /go/src/gfg/cmd/api
+
+volumes:
+  db:
+  go-pkg:
