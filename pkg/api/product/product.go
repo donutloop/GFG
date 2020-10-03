@@ -1,11 +1,11 @@
 package product
 
 type BaseProduct struct {
-	ProductID int         `json:"-"`
-	UUID string           `json:"uuid"`
-	Name string           `json:"name"`
-	Brand string          `json:"brand"`
-	Stock int             `json:"stock"`
+	ProductID int    `json:"-"`
+	UUID      string `json:"uuid"`
+	Name      string `json:"name"`
+	Brand     string `json:"brand"`
+	Stock     int    `json:"stock"`
 }
 
 type Product struct {
@@ -19,8 +19,8 @@ type ProductV2 struct {
 }
 
 type Seller struct {
-	UUID string `json:"uuid"`
-	Links Links `json:"_links"`
+	UUID  string `json:"uuid"`
+	Links Links  `json:"_links"`
 }
 
 // todo(marcel) move to generic pkg

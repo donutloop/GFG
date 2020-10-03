@@ -3,16 +3,16 @@ package seller
 import "fmt"
 
 type StockFeed struct {
-	OldStock int
-	NewStock int
+	OldStock    int
+	NewStock    int
 	ProductName string
-	Email   string
-	Phone   string
-	SellerUUID string
+	Email       string
+	Phone       string
+	SellerUUID  string
 }
 
 type Provider interface {
-	 StockChanged(feed *StockFeed)
+	StockChanged(feed *StockFeed)
 }
 
 func NewProvider(providers []Provider) Provider {

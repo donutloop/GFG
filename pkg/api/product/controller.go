@@ -17,16 +17,16 @@ const (
 
 func NewController(repository *repository, sellerRepository *seller.Repository, provider seller.Provider) *controller {
 	return &controller{
-		repository: repository,
+		repository:       repository,
 		sellerRepository: sellerRepository,
-		sellerProvider: provider,
+		sellerProvider:   provider,
 	}
 }
 
 type controller struct {
-	repository *repository
+	repository       *repository
 	sellerRepository *seller.Repository
-	sellerProvider seller.Provider
+	sellerProvider   seller.Provider
 }
 
 func (pc *controller) List(c *gin.Context) {
@@ -39,7 +39,7 @@ func (pc *controller) List(c *gin.Context) {
 		return
 	}
 
-	products, err  := pc.repository.list((request.Page - 1) * LIST_PAGE_SIZE, LIST_PAGE_SIZE)
+	products, err := pc.repository.list((request.Page-1)*LIST_PAGE_SIZE, LIST_PAGE_SIZE)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to query product list")
@@ -84,7 +84,7 @@ func (pc *controller) Get(c *gin.Context) {
 	}
 
 	if productV2, ok := product.(*ProductV2); ok {
-		productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(location.Get(c), "/sellers",  productV2.Seller.UUID)
+		productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(location.Get(c), "/sellers", productV2.Seller.UUID)
 	}
 
 	productJson, err := json.Marshal(product)
@@ -100,9 +100,9 @@ func (pc *controller) Get(c *gin.Context) {
 
 func (pc *controller) Post(c *gin.Context) {
 	request := &struct {
-		Name string `form:"name"`
-		Brand string `form:"brand"`
-		Stock int `form:"stock"`
+		Name   string `form:"name"`
+		Brand  string `form:"brand"`
+		Stock  int    `form:"stock"`
 		Seller string `form:"seller"`
 	}{}
 
@@ -126,12 +126,12 @@ func (pc *controller) Post(c *gin.Context) {
 
 	product := &Product{
 		BaseProduct: BaseProduct{
-			UUID:      uuid.New().String(),
-			Name:      request.Name,
-			Brand:     request.Brand,
-			Stock:     request.Stock,
+			UUID:  uuid.New().String(),
+			Name:  request.Name,
+			Brand: request.Brand,
+			Stock: request.Stock,
 		},
-		SellerUUID:    seller.UUID,
+		SellerUUID: seller.UUID,
 	}
 
 	err = pc.repository.insert(product)
@@ -172,9 +172,9 @@ func (pc *controller) Put(c *gin.Context) {
 	}
 
 	request := &struct {
-		Name string `form:"name"`
+		Name  string `form:"name"`
 		Brand string `form:"brand"`
-		Stock int `form:"stock"`
+		Stock int    `form:"stock"`
 	}{}
 
 	if err := c.ShouldBindJSON(request); err != nil {
@@ -206,12 +206,12 @@ func (pc *controller) Put(c *gin.Context) {
 		}
 
 		stockFeed := &seller.StockFeed{
-			Email: s.Email,
-			Phone: s.Phone,
-			OldStock: oldStock,
-			NewStock: product.Stock,
+			Email:       s.Email,
+			Phone:       s.Phone,
+			OldStock:    oldStock,
+			NewStock:    product.Stock,
 			ProductName: product.Name,
-			SellerUUID: s.UUID,
+			SellerUUID:  s.UUID,
 		}
 
 		pc.sellerProvider.StockChanged(stockFeed)

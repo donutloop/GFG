@@ -45,6 +45,5 @@ func CreateAPIEngine(db *sql.DB, activateSMSProvider, activateEmailProvider bool
 	v2.GET("products", productController.List)
 	v2.GET("product", productController.Get)
 
-
 	return r, nil
 }

@@ -58,4 +58,3 @@ func (r *Repository) list() ([]*Seller, error) {
 
 	return sellers, nil
 }
-
