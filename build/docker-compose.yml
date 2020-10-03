@@ -18,7 +18,7 @@ services:
 
   product:
     container_name: gfg_go
-    image: golang:1.13
+    image: golang:1.15
     ports:
       - "8080:8080"
     command: go run api.go

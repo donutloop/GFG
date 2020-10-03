@@ -99,6 +99,10 @@ If Product Update (PUT request) changes current Stock of the products, then the 
 If Product Update (PUT request) changes current Stock of the products, then the seller of this product receives Email and/or SMS with warning.
 What type of notifications should be sent to seller SHOULD be defined as an application level configuration.
 
+**Marcel's Suggestions:**
+
+**Please consider to use query url parameter to switch between communications providers instead of using application level configuration**
+
 **IMPORTANT:** Implementation of communication with 3rd party SMS providers is not needed. Instead, please create log entry with following text template:
 ```
 SMS Warning sent to {seller_UUID} (Phone: {seller_Phone}): {Product_name} Product stock changed

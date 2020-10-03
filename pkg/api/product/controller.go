@@ -1,8 +1,10 @@
 package product
 
 import (
-	"gfg/pkg/api/seller"
 	"encoding/json"
+	"gfg/pkg/api/seller"
+	"gfg/pkg/api/urlutil"
+	"github.com/gin-contrib/location"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -57,6 +59,14 @@ func (pc *controller) List(c *gin.Context) {
 }
 
 func (pc *controller) Get(c *gin.Context) {
+
+	var product interface{}
+	if c.FullPath() == "/api/v1/product" {
+		product = new(Product)
+	} else if c.FullPath() == "/api/v2/product" {
+		product = new(ProductV2)
+	}
+
 	request := &struct {
 		UUID string `form:"id" binding:"required"`
 	}{}
@@ -66,12 +76,15 @@ func (pc *controller) Get(c *gin.Context) {
 		return
 	}
 
-	product, err := pc.repository.findByUUID(request.UUID)
-
+	err := pc.repository.findByUUID(request.UUID, product)
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to query product by uuid")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fail to query product by uuid"})
 		return
+	}
+
+	if productV2, ok := product.(*ProductV2); ok {
+		productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(location.Get(c), "/sellers",  productV2.Seller.UUID)
 	}
 
 	productJson, err := json.Marshal(product)
@@ -111,11 +124,13 @@ func (pc *controller) Post(c *gin.Context) {
 		return
 	}
 
-	product := &product{
-		UUID:      uuid.New().String(),
-		Name:      request.Name,
-		Brand:     request.Brand,
-		Stock:     request.Stock,
+	product := &Product{
+		BaseProduct: BaseProduct{
+			UUID:      uuid.New().String(),
+			Name:      request.Name,
+			Brand:     request.Brand,
+			Stock:     request.Stock,
+		},
 		SellerUUID:    seller.UUID,
 	}
 
@@ -148,8 +163,8 @@ func (pc *controller) Put(c *gin.Context) {
 		return
 	}
 
-	product, err := pc.repository.findByUUID(queryRequest.UUID)
-
+	product := new(Product)
+	err := pc.repository.findByUUID(queryRequest.UUID, product)
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to query product by uuid")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fail to query product by uuid"})
@@ -214,21 +229,21 @@ func (pc *controller) Delete(c *gin.Context) {
 		return
 	}
 
-	product, err := pc.repository.findByUUID(request.UUID)
-
+	// todo(marcel) don't fetch all to make a exits check
+	product := new(Product)
+	err := pc.repository.findByUUID(request.UUID, product)
 	if err != nil {
+		if err == ErrNotFound {
+			// todo(marcel) If resource is not available then please return http.StatusNotFound
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Product is not found"})
+			return
+		}
 		log.Error().Err(err).Msg("Fail to query product by uuid")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fail to query product by uuid"})
 		return
 	}
 
-	if product == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Product is not found"})
-		return
-	}
-
 	err = pc.repository.delete(product)
-
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to delete product")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fail to delete product"})
