@@ -1,12 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"gfg/pkg/api"
-	"os"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql")
+	"os"
+)
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
@@ -20,7 +21,10 @@ func main() {
 
 	defer db.Close()
 
-	engine, err := api.CreateAPIEngine(db)
+	activateSMSProvider := os.Getenv("SMS_PROVIDER") == "true"
+	activateEmailProvider := os.Getenv("EMAIL_PROVIDER") == "true"
+
+	engine, err := api.CreateAPIEngine(db, activateSMSProvider, activateEmailProvider)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to create server")

@@ -10,7 +10,7 @@ import (
 
 // CreateAPIEngine creates engine instance that serves API endpoints,
 // consider it as a router for incoming requests.
-func CreateAPIEngine(db *sql.DB) (*gin.Engine, error) {
+func CreateAPIEngine(db *sql.DB, activateSMSProvider, activateEmailProvider bool) (*gin.Engine, error) {
 	r := gin.New()
 
 	// todo change http url to real url by env variable
@@ -20,8 +20,19 @@ func CreateAPIEngine(db *sql.DB) (*gin.Engine, error) {
 
 	productRepository := product.NewRepository(db)
 	sellerRepository := seller.NewRepository(db)
-	emailProvider := seller.NewEmailProvider()
-	productController := product.NewController(productRepository, sellerRepository, emailProvider)
+
+	var providers []seller.Provider
+	if activateEmailProvider {
+		emailProvider := seller.NewEmailProvider()
+		providers = append(providers, emailProvider)
+	}
+	if activateSMSProvider {
+		smsProvider := seller.NewSMSProvider()
+		providers = append(providers, smsProvider)
+	}
+	provider := seller.NewProvider(providers)
+
+	productController := product.NewController(productRepository, sellerRepository, provider)
 	v1.GET("products", productController.List)
 	v1.GET("product", productController.Get)
 	v1.POST("product", productController.Post)

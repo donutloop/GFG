@@ -15,18 +15,18 @@ const (
 	LIST_PAGE_SIZE = 10
 )
 
-func NewController(repository *repository, sellerRepository *seller.Repository, sellerEmailProvider *seller.EmailProvider) *controller {
+func NewController(repository *repository, sellerRepository *seller.Repository, provider seller.Provider) *controller {
 	return &controller{
 		repository: repository,
 		sellerRepository: sellerRepository,
-		sellerEmailProvider: sellerEmailProvider,
+		sellerProvider: provider,
 	}
 }
 
 type controller struct {
 	repository *repository
 	sellerRepository *seller.Repository
-	sellerEmailProvider *seller.EmailProvider
+	sellerProvider seller.Provider
 }
 
 func (pc *controller) List(c *gin.Context) {
@@ -197,7 +197,7 @@ func (pc *controller) Put(c *gin.Context) {
 	}
 
 	if oldStock != product.Stock {
-		seller, err := pc.sellerRepository.FindByUUID(product.SellerUUID)
+		s, err := pc.sellerRepository.FindByUUID(product.SellerUUID)
 
 		if err != nil {
 			log.Error().Err(err).Msg("Fail to query seller by UUID")
@@ -205,7 +205,16 @@ func (pc *controller) Put(c *gin.Context) {
 			return
 		}
 
-		pc.sellerEmailProvider.StockChanged(oldStock, product.Stock, seller.Email)
+		stockFeed := &seller.StockFeed{
+			Email: s.Email,
+			Phone: s.Phone,
+			OldStock: oldStock,
+			NewStock: product.Stock,
+			ProductName: product.Name,
+			SellerUUID: s.UUID,
+		}
+
+		pc.sellerProvider.StockChanged(stockFeed)
 	}
 
 	jsonData, err := json.Marshal(product)
