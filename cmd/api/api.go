@@ -1,7 +1,7 @@
 package main
 
 import (
-	"coding-challenge-go/pkg/api"
+	"gfg/pkg/api"
 	"os"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

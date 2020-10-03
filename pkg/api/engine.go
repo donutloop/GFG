@@ -1,8 +1,8 @@
 package api
 
 import (
-	"coding-challenge-go/pkg/api/product"
-	"coding-challenge-go/pkg/api/seller"
+	"gfg/pkg/api/product"
+	"gfg/pkg/api/seller"
 	"database/sql"
 	"github.com/gin-gonic/gin"
 )

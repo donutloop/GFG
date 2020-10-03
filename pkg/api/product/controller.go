@@ -1,7 +1,7 @@
 package product
 
 import (
-	"coding-challenge-go/pkg/api/seller"
+	"gfg/pkg/api/seller"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

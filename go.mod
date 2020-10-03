@@ -1,4 +1,4 @@
-module coding-challenge-go
+module gfg
 
 go 1.14
 
