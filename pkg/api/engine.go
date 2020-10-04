@@ -10,11 +10,14 @@ import (
 
 // CreateAPIEngine creates engine instance that serves API endpoints,
 // consider it as a router for incoming requests.
-func CreateAPIEngine(db *sql.DB, activateSMSProvider, activateEmailProvider bool) (*gin.Engine, error) {
+func CreateAPIEngine(db *sql.DB, activateSMSProvider, activateEmailProvider bool, apiHost , apiScheme string) (*gin.Engine, error) {
 	r := gin.New()
 
-	// todo change http url to real url by env variable
-	r.Use(location.Default())
+	r.Use(location.New(location.Config{
+		Scheme: apiScheme,
+		Host: apiHost,
+		Headers: location.Headers{Scheme: "X-Forwarded-Proto", Host: "X-Forwarded-For"},
+	}))
 
 	v1 := r.Group("api/v1")
 

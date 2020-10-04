@@ -140,7 +140,7 @@ func (r *repository) list(offset int, limit int, dest interface{}, url ...*url.U
 				panic("url arg is bad")
 			}
 			err = rows.Scan(&productV2.ProductID, &productV2.Name, &productV2.Brand, &productV2.Stock, &productV2.Seller.UUID, &productV2.UUID)
-			productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(url[0], "/sellers", productV2.Seller.UUID)
+			productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(url[0], "/api/v1/sellers", productV2.Seller.UUID)
 		} else {
 			panic("injected the wrong object")
 		}

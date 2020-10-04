@@ -94,7 +94,7 @@ func (pc *controller) Get(c *gin.Context) {
 	}
 
 	if productV2, ok := product.(*ProductV2); ok {
-		productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(location.Get(c), "/sellers", productV2.Seller.UUID)
+		productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(location.Get(c), "/api/v1/sellers", productV2.Seller.UUID)
 	}
 
 	productJson, err := json.Marshal(product)

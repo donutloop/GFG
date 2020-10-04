@@ -26,6 +26,8 @@ services:
       - LISTEN=:8080
       - SMS_PROVIDER=true
       - EMAIL_PROVIDER=false
+      - API_HOST=localhost:8080
+      - API_SCHEME=http
     depends_on:
       - db
     links:

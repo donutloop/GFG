@@ -24,7 +24,17 @@ func main() {
 	activateSMSProvider := os.Getenv("SMS_PROVIDER") == "true"
 	activateEmailProvider := os.Getenv("EMAIL_PROVIDER") == "true"
 
-	engine, err := api.CreateAPIEngine(db, activateSMSProvider, activateEmailProvider)
+	apiHost := os.Getenv("API_HOST")
+	if apiHost == "" {
+		panic("API_HOST env var is missing")
+	}
+
+	apiScheme := os.Getenv("API_SCHEME")
+	if apiHost == "" {
+		panic("API_SCHEME env var is missing")
+	}
+
+	engine, err := api.CreateAPIEngine(db, activateSMSProvider, activateEmailProvider, apiHost, apiScheme)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to create server")
