@@ -27,6 +27,9 @@ type provider struct {
 
 func (ep *provider) StockChanged(feed *StockFeed) {
 	for _, provider := range ep.providers {
+		if provider == nil {
+			panic("provider is nil")
+		}
 		provider.StockChanged(feed)
 	}
 }
