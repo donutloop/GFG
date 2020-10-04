@@ -39,7 +39,17 @@ func (pc *controller) List(c *gin.Context) {
 		return
 	}
 
-	products, err := pc.repository.list((request.Page-1)*LIST_PAGE_SIZE, LIST_PAGE_SIZE)
+	var responseValue interface{}
+	var err error
+	if c.FullPath() == "/api/v1/products" {
+		products := make([]*Product, 0)
+		err = pc.repository.list((request.Page-1)*LIST_PAGE_SIZE, LIST_PAGE_SIZE, &products)
+		responseValue = products
+	} else if c.FullPath() == "/api/v2/products" {
+		products := make([]*ProductV2, 0)
+		err = pc.repository.list((request.Page-1)*LIST_PAGE_SIZE, LIST_PAGE_SIZE, &products, location.Get(c))
+		responseValue = products
+	}
 
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to query product list")
@@ -47,7 +57,7 @@ func (pc *controller) List(c *gin.Context) {
 		return
 	}
 
-	productsJson, err := json.Marshal(products)
+	productsJson, err := json.Marshal(responseValue)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Fail to marshal products")

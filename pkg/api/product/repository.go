@@ -3,6 +3,9 @@ package product
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"gfg/pkg/api/urlutil"
+	"net/url"
 	"reflect"
 )
 
@@ -56,36 +59,6 @@ func (r *repository) update(product *Product) error {
 	return nil
 }
 
-func (r *repository) list(offset int, limit int) ([]*Product, error) {
-	rows, err := r.db.Query(
-		"SELECT p.id_product, p.name, p.brand, p.stock, s.uuid, p.uuid FROM product p "+
-			"INNER JOIN seller s ON(s.id_seller = p.fk_seller) LIMIT ? OFFSET ?",
-		limit, offset,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var products []*Product
-
-	for rows.Next() {
-		product := &Product{}
-
-		err = rows.Scan(&product.ProductID, &product.Name, &product.Brand, &product.Stock, &product.SellerUUID, &product.UUID)
-
-		if err != nil {
-			return nil, err
-		}
-
-		products = append(products, product)
-	}
-
-	return products, nil
-}
-
 var ErrNotFound = errors.New("Object not found")
 
 func (r *repository) findByUUID(uuid string, product interface{}) error {
@@ -122,4 +95,81 @@ func (r *repository) findByUUID(uuid string, product interface{}) error {
 	}
 
 	return nil
+}
+
+func (r *repository) list(offset int, limit int, dest interface{}, url ...*url.URL) error {
+	var vp reflect.Value
+
+	value := reflect.ValueOf(dest)
+
+	if value.Kind() != reflect.Ptr {
+		return errors.New("must pass a pointer, not a value, to destination")
+	}
+	if value.IsNil() {
+		return errors.New("nil pointer passed to destination")
+	}
+
+	direct := reflect.Indirect(value)
+
+	slice, err := baseType(value.Type(), reflect.Slice)
+	if err != nil {
+		return err
+	}
+
+	isPtr := slice.Elem().Kind() == reflect.Ptr
+	base := Deref(slice.Elem())
+
+	rows, err := r.db.Query(
+		"SELECT p.id_product, p.name, p.brand, p.stock, s.uuid, p.uuid FROM product p "+
+			"INNER JOIN seller s ON(s.id_seller = p.fk_seller) LIMIT ? OFFSET ?",
+		limit, offset,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		vp = reflect.New(base)
+		if productV1, ok := vp.Interface().(*Product); ok {
+			err = rows.Scan(&productV1.ProductID, &productV1.Name, &productV1.Brand, &productV1.Stock, &productV1.SellerUUID, &productV1.UUID)
+		} else if productV2, ok := vp.Interface().(*ProductV2); ok {
+			if len(url) != 1 {
+				panic("url arg is bad")
+			}
+			err = rows.Scan(&productV2.ProductID, &productV2.Name, &productV2.Brand, &productV2.Stock, &productV2.Seller.UUID, &productV2.UUID)
+			productV2.Seller.Links.Self.Href = urlutil.BuildSelfReferenceURL(url[0], "/sellers", productV2.Seller.UUID)
+		} else {
+			panic("injected the wrong object")
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if isPtr {
+			direct.Set(reflect.Append(direct, vp))
+		} else {
+			direct.Set(reflect.Append(direct, reflect.Indirect(vp)))
+		}
+	}
+
+	return nil
+}
+
+func baseType(t reflect.Type, expected reflect.Kind) (reflect.Type, error) {
+	t = Deref(t)
+	if t.Kind() != expected {
+		return nil, fmt.Errorf("expected %s but got %s", expected, t.Kind())
+	}
+	return t, nil
+}
+
+func Deref(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t
 }
